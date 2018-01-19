@@ -1,9 +1,7 @@
 Dropwizard Elasticsearch
 ========================
 
-[![Build Status](https://travis-ci.org/dropwizard/dropwizard-elasticsearch.svg?branch=master)](https://travis-ci.org/dropwizard/dropwizard-elasticsearch)
-[![Coverage Status](https://img.shields.io/coveralls/dropwizard/dropwizard-elasticsearch.svg)](https://coveralls.io/r/dropwizard/dropwizard-elasticsearch)
-[![Maven Central](https://img.shields.io/maven-central/v/io.dropwizard.modules/dropwizard-elasticsearch.svg)](http://mvnrepository.com/artifact/io.dropwizard.modules/dropwizard-elasticsearch)
+Forked from [mattflax/dropwizard-elasticsearch] [5]
 
 A set of classes for using [Elasticsearch] [1] (version 2.3.0 and higher) in a [Dropwizard] [2] application.
 
@@ -14,6 +12,7 @@ common options (`EsConfiguration`), and some [health checks] [4] which can insta
 [2]: http://dropwizard.io/1.2.0/docs
 [3]: http://dropwizard.io/1.2.0/docs/manual/core.html#managed-objects
 [4]: http://dropwizard.io/1.2.0/docs/manual/core.html#health-checks
+[5]: https://github.com/mattflax/dropwizard-elasticsearch/tree/elasticsearch-5.0
 
 
 Usage
@@ -59,9 +58,9 @@ The order of precedence is: `nodeClient`/`servers`/`clusterName` > `settings` > 
 any setting in `settingsFile` can be overwritten with `settings` which in turn get overwritten by the specific settings
 like `clusterName`.
 
-### Notes for Elasticsearch 5.x
+### Notes for Elasticsearch 5.x and 6.x
 
-Elasticsearch 5 does not allow the creation of a NodeClient, and it is disabled in this version of
+From version  5.x Elasticsearch does not allow the creation of a NodeClient, and it is disabled in this version of
 the connector.
 
 The suggested alternative is to launch a local coordinating node, with whichever plugins you require,
@@ -77,9 +76,9 @@ This project is available on Maven Central. To add it to your project simply add
 `pom.xml`:
 
     <dependency>
-      <groupId>io.dropwizard.modules</groupId>
+      <groupId>com.engagetech.dropwizard.modules</groupId>
       <artifactId>dropwizard-elasticsearch</artifactId>
-      <version>1.2.0-1</version>
+      <version>1.2.0-2-ES6.0.0</version>
     </dependency>
 
 
