@@ -7,7 +7,7 @@
         <maven>3.0.0</maven>
     </prerequisites>
 
-    <groupId>io.dropwizard.modules</groupId>
+    <groupId>com.engagetech.dropwizard.modules</groupId>
     <artifactId>dropwizard-elasticsearch</artifactId>
     <version>1.2.0-2-ES6.0.0-SNAPSHOT</version>
     <packaging>jar</packaging>
@@ -25,20 +25,15 @@
     </licenses>
 
     <scm>
-        <developerConnection>scm:git:git@github.com:mattflax/dropwizard-elasticsearch.git</developerConnection>
-        <connection>scm:git:https://github.com/mattflax/dropwizard-elasticsearch.git</connection>
-        <url>https://github.com/mattflax/dropwizard-elasticsearch</url>
-        <tag>HEAD</tag>
+        <developerConnection>scm:git:git@github.com:engagetech/dropwizard-elasticsearch.git</developerConnection>
+        <connection>scm:git:https://github.com/engagetech/dropwizard-elasticsearch.git</connection>
+        <url>https://github.com/engagetech/dropwizard-elasticsearch</url>
+      <tag>HEAD</tag>
     </scm>
-
-    <ciManagement>
-        <system>Travis CI</system>
-        <url>https://travis-ci.org/mattflax/dropwizard-elasticsearch</url>
-    </ciManagement>
 
     <issueManagement>
         <system>GitHub Issues</system>
-        <url>https://github.com/dropwizard/dropwizard-elasticsearch/issues</url>
+        <url>https://github.com/engagetech/dropwizard-elasticsearch/issues</url>
     </issueManagement>
 
     <distributionManagement>
@@ -47,14 +42,9 @@
             <url>https://oss.sonatype.org/content/repositories/snapshots</url>
         </snapshotRepository>
         <repository>
-            <id>internal.repo</id>
-            <name>Temporary Staging Repository</name>
-            <url>file://${project.build.directory}/mvn-repo</url>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
         </repository>
-        <site>
-            <id>dropwizard-elasticsearch</id>
-            <url>http://dropwizard.github.io/dropwizard-elasticsearch/${project.version}</url>
-        </site>
     </distributionManagement>
 
     <developers>
@@ -67,6 +57,11 @@
             <id>mattflax</id>
             <name>Matt Pearce</name>
             <email>matt@flax.co.uk</email>
+        </developer>
+        <developer>
+            <id>gajicvedrana</id>
+            <name>Vedrana Gajić</name>
+            <email>vedrana.gajic@engagetech.com</email>
         </developer>
     </developers>
 
@@ -251,7 +246,7 @@
                         <include>**/*</include>
                     </includes>
                     <repositoryName>dropwizard-elasticsearch</repositoryName>
-                    <repositoryOwner>mattflax</repositoryOwner>
+                    <repositoryOwner>engagetech</repositoryOwner>
                 </configuration>
                 <executions>
                     <execution>
