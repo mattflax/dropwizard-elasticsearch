@@ -9,12 +9,9 @@ import io.dropwizard.elasticsearch.util.TransportAddressHelper;
 import io.dropwizard.jackson.Jackson;
 import io.dropwizard.lifecycle.Managed;
 import org.elasticsearch.client.Client;
-import org.elasticsearch.client.node.NodeClient;
 import org.elasticsearch.client.transport.TransportClient;
-import org.elasticsearch.node.Node;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import javax.validation.Validation;
@@ -26,12 +23,10 @@ import java.net.URL;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 /**
  * Unit tests for {@link ManagedEsClient}.
@@ -62,11 +57,6 @@ public class ManagedEsClientTest {
     }
 
     @Test(expected = NullPointerException.class)
-    public void ensureNodeIsNotNull() {
-        new ManagedEsClient((Node) null);
-    }
-
-    @Test(expected = NullPointerException.class)
     public void ensureClientIsNotNull() {
         new ManagedEsClient((Client) null);
     }
@@ -80,30 +70,6 @@ public class ManagedEsClientTest {
         managed.stop();
 
         verify(client).close();
-    }
-
-    @Test
-    public void lifecycleMethodsShouldStartAndCloseTheNode() throws Exception {
-        Node node = mock(Node.class);
-        when(node.isClosed()).thenReturn(false);
-        Managed managed = new ManagedEsClient(node);
-
-        managed.start();
-        verify(node).start();
-
-        managed.stop();
-        verify(node).close();
-    }
-
-    @Test
-    public void managedEsClientWithNodeShouldReturnClient() throws Exception {
-        Client client = mock(Client.class);
-        Node node = mock(Node.class);
-        when(node.client()).thenReturn(client);
-
-        ManagedEsClient managed = new ManagedEsClient(node);
-
-        assertSame(client, managed.getClient());
     }
 
     @Test(expected = ConfigurationException.class)

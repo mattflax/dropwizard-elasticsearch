@@ -9,7 +9,6 @@ import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.TransportAddress;
 import org.elasticsearch.node.Node;
-import org.elasticsearch.node.NodeValidationException;
 import org.elasticsearch.transport.client.PreBuiltTransportClient;
 
 import java.io.File;
@@ -36,8 +35,8 @@ import static com.google.common.base.Strings.isNullOrEmpty;
  * @see <a href="https://www.elastic.co/guide/en/elasticsearch/client/java-api/current/transport-client.html">Transport Client</a>
  */
 public class ManagedEsClient implements Managed {
-    private Node node = null;
-    private Client client = null;
+
+    private Client client;
 
     /**
      * Create a new managed Elasticsearch {@link Client}. A {@link TransportClient} will be created with {@link EsConfiguration#servers}
@@ -77,16 +76,6 @@ public class ManagedEsClient implements Managed {
         this.client = new PreBuiltTransportClient(settings).addTransportAddresses(addresses);
     }
 
-    /**
-     * Create a new managed Elasticsearch {@link Client} from the provided {@link Node}.
-     *
-     * @param node a valid {@link Node} instance
-     */
-    public ManagedEsClient(final Node node) {
-        this.node = checkNotNull(node, "Elasticsearch node must not be null");
-        this.client = node.client();
-    }
-
 
     /**
      * Create a new managed Elasticsearch {@link Client} from the provided {@link Client}.
@@ -104,7 +93,6 @@ public class ManagedEsClient implements Managed {
      */
     @Override
     public void start() throws Exception {
-        startNode();
     }
 
     /**
@@ -116,7 +104,6 @@ public class ManagedEsClient implements Managed {
     @Override
     public void stop() throws Exception {
         closeClient();
-        closeNode();
     }
 
     /**
@@ -126,20 +113,6 @@ public class ManagedEsClient implements Managed {
      */
     public Client getClient() {
         return client;
-    }
-
-    private Node startNode() throws NodeValidationException {
-        if (null != node) {
-            return node.start();
-        }
-
-        return null;
-    }
-
-    private void closeNode() throws IOException {
-        if (null != node && !node.isClosed()) {
-            node.close();
-        }
     }
 
     private void closeClient() {
