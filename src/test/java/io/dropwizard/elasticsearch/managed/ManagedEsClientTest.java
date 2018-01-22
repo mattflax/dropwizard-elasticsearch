@@ -24,7 +24,11 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -102,7 +106,7 @@ public class ManagedEsClientTest {
         assertSame(client, managed.getClient());
     }
 
-    @Test
+    @Test(expected = ConfigurationException.class)
     public void nodeClientDisallowed() throws URISyntaxException, IOException, ConfigurationException {
         URL configFileUrl = this.getClass().getResource("/node_client.yml");
         File configFile = new File(configFileUrl.toURI());
@@ -114,25 +118,6 @@ public class ManagedEsClientTest {
         } catch (UnsupportedOperationException e) {
             // Expected
         }
-    }
-
-    @Test @Ignore
-    public void nodeClientShouldBeCreatedFromConfig() throws URISyntaxException, IOException, ConfigurationException {
-        URL configFileUrl = this.getClass().getResource("/node_client.yml");
-        File configFile = new File(configFileUrl.toURI());
-        EsConfiguration config = configFactory.build(configFile);
-
-        managedEsClient = new ManagedEsClient(config);
-        Client client = managedEsClient.getClient();
-
-        assertNotNull(client);
-        assertTrue(client instanceof NodeClient);
-
-        NodeClient nodeClient = (NodeClient) client;
-        assertEquals(config.getClusterName(), nodeClient.settings().get("cluster.name"));
-        assertEquals("false", nodeClient.settings().get("node.data"));
-        assertEquals("false", nodeClient.settings().get("node.master"));
-        assertEquals("false", nodeClient.settings().get("node.ingest"));
     }
 
     @Test
@@ -160,7 +145,7 @@ public class ManagedEsClientTest {
                 transportClient.transportAddresses().get(2));
     }
 
-    @Test @Ignore
+    @Test
     public void managedClientShouldUseCustomElasticsearchConfig() throws URISyntaxException, IOException, ConfigurationException {
         URL configFileUrl = this.getClass().getResource("/custom_settings_file.yml");
         File configFile = new File(configFileUrl.toURI());
@@ -170,14 +155,14 @@ public class ManagedEsClientTest {
         Client client = managedEsClient.getClient();
 
         assertNotNull(client);
-        assertTrue(client instanceof NodeClient);
+        assertTrue(client instanceof TransportClient);
 
-        NodeClient nodeClient = (NodeClient) client;
-        assertEquals(config.getClusterName(), nodeClient.settings().get("cluster.name"));
-        assertEquals("19300-19400", nodeClient.settings().get("transport.tcp.port"));
+        TransportClient transportClient = (TransportClient) client;
+        assertEquals(config.getClusterName(), transportClient.settings().get("cluster.name"));
+        assertEquals("19300-19400", transportClient.settings().get("transport.tcp.port"));
     }
 
-    @Test @Ignore
+    @Test
     public void managedClientObeysPrecedenceOfSettings() throws URISyntaxException, IOException, ConfigurationException {
         URL configFileUrl = this.getClass().getResource("/custom_settings_precedence.yml");
         File configFile = new File(configFileUrl.toURI());
@@ -187,11 +172,11 @@ public class ManagedEsClientTest {
         Client client = managedEsClient.getClient();
 
         assertNotNull(client);
-        assertTrue(client instanceof NodeClient);
+        assertTrue(client instanceof TransportClient);
 
-        NodeClient nodeClient = (NodeClient) client;
-        assertEquals(config.getClusterName(), nodeClient.settings().get("cluster.name"));
-        assertEquals("29300-29400", nodeClient.settings().get("transport.tcp.port"));
-        assertEquals("target/data/yaml", nodeClient.settings().get("path.home"));
+        TransportClient transportClient = (TransportClient) client;
+        assertEquals(config.getClusterName(), transportClient.settings().get("cluster.name"));
+        assertEquals("29300-29400", transportClient.settings().get("transport.tcp.port"));
+        assertEquals("target/data/yaml", transportClient.settings().get("path.home"));
     }
 }

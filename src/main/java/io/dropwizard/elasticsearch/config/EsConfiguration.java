@@ -24,9 +24,6 @@ public class EsConfiguration {
     private String clusterName = "elasticsearch";
 
     @JsonProperty
-    private boolean nodeClient = false;
-
-    @JsonProperty
     @NotNull
     private Map<String, String> settings = Collections.emptyMap();
 
@@ -41,10 +38,6 @@ public class EsConfiguration {
         return clusterName;
     }
 
-    public boolean isNodeClient() {
-        return nodeClient;
-    }
-
     public Map<String, String> getSettings() {
         return settings;
     }
@@ -56,6 +49,6 @@ public class EsConfiguration {
     @ValidationMethod
     @JsonIgnore
     public boolean isValidConfig() {
-        return nodeClient || !servers.isEmpty();
+        return !servers.isEmpty();
     }
 }

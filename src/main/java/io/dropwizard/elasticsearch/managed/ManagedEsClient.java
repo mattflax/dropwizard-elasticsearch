@@ -40,8 +40,7 @@ public class ManagedEsClient implements Managed {
     private Client client = null;
 
     /**
-     * Create a new managed Elasticsearch {@link Client}. If {@link EsConfiguration#nodeClient} is {@literal true}, a
-     * Node Client is being created, otherwise a {@link TransportClient} is being created with {@link EsConfiguration#servers}
+     * Create a new managed Elasticsearch {@link Client}. A {@link TransportClient} will be created with {@link EsConfiguration#servers}
      * as transport addresses.
      *
      * @param config a valid {@link EsConfiguration} instance
@@ -74,12 +73,8 @@ public class ManagedEsClient implements Managed {
                 .put(Node.NODE_INGEST_SETTING.getKey(), false)
                 .build();
 
-        if (config.isNodeClient()) {
-            throw new UnsupportedOperationException("Node client is not allowed for Elasticsearch 5. Use a local coordinating node, and the transport client.");
-        } else {
-            final TransportAddress[] addresses = TransportAddressHelper.fromHostAndPorts(config.getServers());
-            this.client = new PreBuiltTransportClient(settings).addTransportAddresses(addresses);
-        }
+        final TransportAddress[] addresses = TransportAddressHelper.fromHostAndPorts(config.getServers());
+        this.client = new PreBuiltTransportClient(settings).addTransportAddresses(addresses);
     }
 
     /**
