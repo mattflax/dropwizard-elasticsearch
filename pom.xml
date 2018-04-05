@@ -8,12 +8,12 @@
     </prerequisites>
 
     <groupId>io.dropwizard.modules</groupId>
-    <artifactId>dropwizard-elasticsearch</artifactId>
-    <version>1.2.0-2-ES5.6.4-SNAPSHOT</version>
+    <artifactId>dropwizard-elasticsearch6</artifactId>
+    <version>1.3.1-0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
-    <name>Dropwizard Elasticsearch Bundle</name>
-    <description>Addon bundle for Dropwizard to support Elasticsearch</description>
+    <name>Dropwizard Elasticsearch 6 Bundle</name>
+    <description>Add-on bundle for Dropwizard to support Elasticsearch 6</description>
     <url>https://github.com/dropwizard/dropwizard-elasticsearch</url>
 
     <licenses>
@@ -25,20 +25,20 @@
     </licenses>
 
     <scm>
-        <developerConnection>scm:git:git@github.com:mattflax/dropwizard-elasticsearch.git</developerConnection>
-        <connection>scm:git:https://github.com/mattflax/dropwizard-elasticsearch.git</connection>
-        <url>https://github.com/mattflax/dropwizard-elasticsearch</url>
+        <developerConnection>scm:git:git@github.com:mattflax/dropwizard-elasticsearch6.git</developerConnection>
+        <connection>scm:git:https://github.com/mattflax/dropwizard-elasticsearch6.git</connection>
+        <url>https://github.com/mattflax/dropwizard-elasticsearch6</url>
         <tag>HEAD</tag>
     </scm>
 
     <ciManagement>
         <system>Travis CI</system>
-        <url>https://travis-ci.org/mattflax/dropwizard-elasticsearch</url>
+        <url>https://travis-ci.org/mattflax/dropwizard-elasticsearch6</url>
     </ciManagement>
 
     <issueManagement>
         <system>GitHub Issues</system>
-        <url>https://github.com/dropwizard/dropwizard-elasticsearch/issues</url>
+        <url>https://github.com/dropwizard/dropwizard-elasticsearch6/issues</url>
     </issueManagement>
 
     <distributionManagement>
@@ -76,8 +76,8 @@
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
         <log4j.version>2.8.1</log4j.version>
-        <dropwizard.version>1.2.0</dropwizard.version>
-        <elasticsearch.version>5.6.4</elasticsearch.version>
+        <dropwizard.version>1.3.1</dropwizard.version>
+        <elasticsearch.version>6.2.3</elasticsearch.version>
         <!-- github server corresponds to entry in ~/.m2/settings.xml -->
         <github.global.server>github</github.global.server>
     </properties>
@@ -113,6 +113,17 @@
         <dependency>
             <groupId>org.elasticsearch.plugin</groupId>
             <artifactId>transport-netty4-client</artifactId>
+            <version>${elasticsearch.version}</version>
+        </dependency>
+        <!-- Elasticsearch high-level REST client -->
+        <dependency>
+            <groupId>org.elasticsearch.client</groupId>
+            <artifactId>elasticsearch-rest-high-level-client</artifactId>
+            <version>${elasticsearch.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.elasticsearch.client</groupId>
+            <artifactId>elasticsearch-rest-client-sniffer</artifactId>
             <version>${elasticsearch.version}</version>
         </dependency>
         <!-- Required for ES 5.x -->
