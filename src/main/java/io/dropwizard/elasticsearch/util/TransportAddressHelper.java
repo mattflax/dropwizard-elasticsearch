@@ -1,7 +1,7 @@
 package io.dropwizard.elasticsearch.util;
 
 import com.google.common.net.HostAndPort;
-import org.elasticsearch.common.transport.InetSocketTransportAddress;
+import org.apache.http.HttpHost;
 import org.elasticsearch.common.transport.TransportAddress;
 
 import java.net.InetSocketAddress;
@@ -22,7 +22,7 @@ public class TransportAddressHelper {
      */
     public static TransportAddress fromHostAndPort(final HostAndPort hostAndPort) {
         InetSocketAddress address = new InetSocketAddress(hostAndPort.getHost(), hostAndPort.getPortOrDefault(DEFAULT_PORT));
-        return new InetSocketTransportAddress(address);
+        return new TransportAddress(address);
     }
 
     /**
@@ -44,5 +44,26 @@ public class TransportAddressHelper {
 
             return transportAddresses;
         }
+    }
+
+    public static TransportAddress[] fromStrings(final List<String> servers) {
+        TransportAddress[] addresses;
+
+        if (servers == null) {
+            addresses = new TransportAddress[0];
+        } else {
+            addresses = new TransportAddress[servers.size()];
+            for (int i = 0; i < servers.size(); i ++) {
+                addresses[i] = fromString(servers.get(i));
+            }
+        }
+
+        return addresses;
+    }
+
+    private static TransportAddress fromString(String server) {
+        HttpHost httpHost = HttpHost.create(server);
+        InetSocketAddress address = new InetSocketAddress(httpHost.getHostName(), httpHost.getPort() == -1 ? DEFAULT_PORT : httpHost.getPort());
+        return new TransportAddress(address);
     }
 }

@@ -4,44 +4,71 @@ import com.google.common.io.Resources;
 import io.dropwizard.elasticsearch.config.EsConfiguration;
 import io.dropwizard.elasticsearch.util.TransportAddressHelper;
 import io.dropwizard.lifecycle.Managed;
+import org.apache.http.Header;
+import org.apache.http.HttpHost;
+import org.apache.http.message.BasicHeader;
 import org.elasticsearch.client.Client;
+import org.elasticsearch.client.RestClient;
+import org.elasticsearch.client.RestClientBuilder;
+import org.elasticsearch.client.sniff.ElasticsearchHostsSniffer;
+import org.elasticsearch.client.sniff.HostsSniffer;
+import org.elasticsearch.client.sniff.SniffOnFailureListener;
+import org.elasticsearch.client.sniff.Sniffer;
+import org.elasticsearch.client.sniff.SnifferBuilder;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.TransportAddress;
 import org.elasticsearch.node.Node;
+import org.elasticsearch.node.NodeValidationException;
+import org.elasticsearch.transport.client.PreBuiltTransportClient;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Strings.isNullOrEmpty;
-import static org.elasticsearch.node.NodeBuilder.nodeBuilder;
 
 /**
- * A Dropwizard managed Elasticsearch {@link Client}. Depending on the {@link EsConfiguration} a Node Client or
- * a {@link TransportClient} a is being created and its lifecycle is managed by Dropwizard.
+ * A Dropwizard managed Elasticsearch {@link Client} for Elasticsearch 5.
+ * <p>
+ * Elasticsearch 5 no longer allows using a Node Client to connect to the service. The advice
+ * is to run a local coordinating node (with whichever plugins you require), and to use the
+ * {@link TransportClient} to connect to your cluster via that node.
+ * <p>
+ * If the {@code nodeClient} configuration option is selected, the client will fail and
+ * throw an {@link UnsupportedOperationException}.
  *
- * @see <a href="http://www.elasticsearch.org/guide/reference/java-api/client/#nodeclient">Node Client</a>
- * @see <a href="http://www.elasticsearch.org/guide/reference/java-api/client/#transportclient">Transport Client</a>
+ * @see <a href="https://www.elastic.co/guide/en/elasticsearch/client/java-api/current/client-connected-to-client-node.html">Connecting a Client to a Coordinating Only Node</a>
+ * @see <a href="https://www.elastic.co/guide/en/elasticsearch/client/java-api/current/transport-client.html">Transport Client</a>
  */
 public class ManagedEsClient implements Managed {
-    private Node node = null;
-    private Client client = null;
+
+    private Client client;
+    private RestClient restClient;
+    private Sniffer sniffer;
 
     /**
-     * Create a new managed Elasticsearch {@link Client}. If {@link EsConfiguration#nodeClient} is {@literal true}, a
-     * Node Client is being created, otherwise a {@link TransportClient} is being created with {@link EsConfiguration#servers}
+     * Create a new managed Elasticsearch {@link Client}. A {@link TransportClient} will be created with {@link EsConfiguration#servers}
      * as transport addresses.
      *
      * @param config a valid {@link EsConfiguration} instance
+     * @throws IOException                   if a settings file has been specified and cannot be read.
+     * @throws UnsupportedOperationException if {@code nodeClient=true} has been configured. This version
+     *                                       of Elasticsearch does not provide a NodeClient.
      */
-    public ManagedEsClient(final EsConfiguration config) {
+    public ManagedEsClient(final EsConfiguration config) throws IOException {
         checkNotNull(config, "EsConfiguration must not be null");
 
+        // Initialise the settings
         final Settings.Builder settingsBuilder = Settings.builder();
+        // If a settings file is given, read settings from there
         if (!isNullOrEmpty(config.getSettingsFile())) {
             Path path = Paths.get(config.getSettingsFile());
             if (!path.toFile().exists()) {
@@ -55,32 +82,53 @@ public class ManagedEsClient implements Managed {
             settingsBuilder.loadFromPath(path);
         }
 
+        // Add any additional user-specific settings
+        if (!config.getSettings().isEmpty()) {
+            config.getSettings().forEach(settingsBuilder::put);
+        }
+
         final Settings settings = settingsBuilder
-                .put(config.getSettings())
                 .put("cluster.name", config.getClusterName())
                 .build();
 
-        if (config.isNodeClient()) {
-            this.node = nodeBuilder()
-                    .client(true)
-                    .data(false)
-                    .settings(settings)
-                    .build();
-            this.client = this.node.client();
+        if (config.isTransportClient()) {
+            final TransportAddress[] addresses = TransportAddressHelper.fromStrings(config.getServers());
+            this.client = new PreBuiltTransportClient(settings).addTransportAddresses(addresses);
         } else {
-            final TransportAddress[] addresses = TransportAddressHelper.fromHostAndPorts(config.getServers());
-            this.client = TransportClient.builder().settings(settings).build().addTransportAddresses(addresses);
-        }
-    }
+            // Build a REST client
+            HttpHost[] hosts = config.getServers().stream().map(HttpHost::create).toArray(HttpHost[]::new);
+            RestClientBuilder clientBuilder = RestClient.builder(hosts);
+            if (!config.getHeaders().isEmpty()) {
+                Header[] headers = config.getHeaders().entrySet().stream()
+                        .map(e -> new BasicHeader(e.getKey(), e.getValue()))
+                        .toArray(BasicHeader[]::new);
+                clientBuilder.setDefaultHeaders(headers);
+            }
 
-    /**
-     * Create a new managed Elasticsearch {@link Client} from the provided {@link Node}.
-     *
-     * @param node a valid {@link Node} instance
-     */
-    public ManagedEsClient(final Node node) {
-        this.node = checkNotNull(node, "Elasticsearch node must not be null");
-        this.client = node.client();
+            // If Sniffer is enabled, initialise that too
+            if (config.getSniffer().isEnabled()) {
+                SniffOnFailureListener failureListener =  null;
+                if (config.getSniffer().isSniffOnFailure()) {
+                    failureListener = new SniffOnFailureListener();
+                    clientBuilder.setFailureListener(failureListener);
+                }
+                this.restClient = clientBuilder.build();
+
+                SnifferBuilder snifferBuilder = Sniffer.builder(restClient)
+                        .setSniffIntervalMillis(config.getSniffer().getSniffIntervalMillis())
+                        .setSniffAfterFailureDelayMillis(config.getSniffer().getSniffFailureMillis());
+                if (config.getSniffer().isUseHttps()) {
+                    HostsSniffer hostsSniffer = new ElasticsearchHostsSniffer(restClient, ElasticsearchHostsSniffer.DEFAULT_SNIFF_REQUEST_TIMEOUT, ElasticsearchHostsSniffer.Scheme.HTTPS);
+                    snifferBuilder.setHostsSniffer(hostsSniffer);
+                }
+                this.sniffer = snifferBuilder.build();
+                if (failureListener != null) {
+                    failureListener.setSniffer(sniffer);
+                }
+            } else {
+                this.restClient = clientBuilder.build();
+            }
+        }
     }
 
 
@@ -100,7 +148,6 @@ public class ManagedEsClient implements Managed {
      */
     @Override
     public void start() throws Exception {
-        startNode();
     }
 
     /**
@@ -112,7 +159,8 @@ public class ManagedEsClient implements Managed {
     @Override
     public void stop() throws Exception {
         closeClient();
-        closeNode();
+        closeSniffer();
+        closeRestClient();
     }
 
     /**
@@ -124,18 +172,14 @@ public class ManagedEsClient implements Managed {
         return client;
     }
 
-    private Node startNode() {
-        if (null != node) {
-            return node.start();
-        }
-
-        return null;
-    }
-
-    private void closeNode() {
-        if (null != node && !node.isClosed()) {
-            node.close();
-        }
+    /**
+     * Get the REST client. This can then be used to build a high-level REST
+     * client if required.
+     *
+     * @return the REST client, or {@code null} if using the Transport client.
+     */
+    public RestClient getRestClient() {
+        return restClient;
     }
 
     private void closeClient() {
@@ -143,4 +187,17 @@ public class ManagedEsClient implements Managed {
             client.close();
         }
     }
+
+    private void closeSniffer() throws IOException {
+        if (null != sniffer) {
+            sniffer.close();
+        }
+    }
+
+    private void closeRestClient() throws IOException {
+        if (null != restClient) {
+            restClient.close();
+        }
+    }
+
 }

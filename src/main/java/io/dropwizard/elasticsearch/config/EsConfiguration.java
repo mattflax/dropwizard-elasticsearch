@@ -17,32 +17,34 @@ import java.util.Map;
 public class EsConfiguration {
     @JsonProperty
     @NotNull
-    private List<HostAndPort> servers = Collections.emptyList();
+    private List<String> servers = Collections.emptyList();
 
     @JsonProperty
     @NotEmpty
     private String clusterName = "elasticsearch";
 
     @JsonProperty
-    private boolean nodeClient = true;
-
-    @JsonProperty
     @NotNull
     private Map<String, String> settings = Collections.emptyMap();
 
     @JsonProperty
+    private Map<String, String> headers = Collections.emptyMap();
+
+    @JsonProperty
     private String settingsFile = null;
 
-    public List<HostAndPort> getServers() {
+    @JsonProperty
+    private boolean transportClient = false;
+
+    @JsonProperty
+    private EsSnifferConfiguration sniffer = new EsSnifferConfiguration();
+
+    public List<String> getServers() {
         return servers;
     }
 
     public String getClusterName() {
         return clusterName;
-    }
-
-    public boolean isNodeClient() {
-        return nodeClient;
     }
 
     public Map<String, String> getSettings() {
@@ -53,9 +55,21 @@ public class EsConfiguration {
         return settingsFile;
     }
 
+    public boolean isTransportClient() {
+        return transportClient;
+    }
+
+    public Map<String, String> getHeaders() {
+        return headers;
+    }
+
+    public EsSnifferConfiguration getSniffer() {
+        return sniffer;
+    }
+
     @ValidationMethod
     @JsonIgnore
     public boolean isValidConfig() {
-        return nodeClient || !servers.isEmpty();
+        return !servers.isEmpty();
     }
 }
