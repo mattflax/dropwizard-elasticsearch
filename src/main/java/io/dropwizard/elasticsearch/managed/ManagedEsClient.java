@@ -10,6 +10,7 @@ import org.apache.http.message.BasicHeader;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestClientBuilder;
+import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.client.sniff.ElasticsearchHostsSniffer;
 import org.elasticsearch.client.sniff.HostsSniffer;
 import org.elasticsearch.client.sniff.SniffOnFailureListener;
@@ -19,7 +20,6 @@ import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.TransportAddress;
 import org.elasticsearch.node.Node;
-import org.elasticsearch.node.NodeValidationException;
 import org.elasticsearch.transport.client.PreBuiltTransportClient;
 
 import java.io.File;
@@ -28,9 +28,6 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Strings.isNullOrEmpty;
@@ -51,7 +48,7 @@ import static com.google.common.base.Strings.isNullOrEmpty;
 public class ManagedEsClient implements Managed {
 
     private Client client;
-    private RestClient restClient;
+    private RestHighLevelClient restHighLevelClient;
     private Sniffer sniffer;
 
     /**
@@ -112,13 +109,15 @@ public class ManagedEsClient implements Managed {
                     failureListener = new SniffOnFailureListener();
                     clientBuilder.setFailureListener(failureListener);
                 }
-                this.restClient = clientBuilder.build();
+                this.restHighLevelClient = new RestHighLevelClient(clientBuilder);
 
-                SnifferBuilder snifferBuilder = Sniffer.builder(restClient)
+                SnifferBuilder snifferBuilder = Sniffer.builder(restHighLevelClient.getLowLevelClient())
                         .setSniffIntervalMillis(config.getSniffer().getSniffIntervalMillis())
                         .setSniffAfterFailureDelayMillis(config.getSniffer().getSniffFailureMillis());
                 if (config.getSniffer().isUseHttps()) {
-                    HostsSniffer hostsSniffer = new ElasticsearchHostsSniffer(restClient, ElasticsearchHostsSniffer.DEFAULT_SNIFF_REQUEST_TIMEOUT, ElasticsearchHostsSniffer.Scheme.HTTPS);
+                    HostsSniffer hostsSniffer = new ElasticsearchHostsSniffer(restHighLevelClient.getLowLevelClient(),
+							ElasticsearchHostsSniffer.DEFAULT_SNIFF_REQUEST_TIMEOUT,
+							ElasticsearchHostsSniffer.Scheme.HTTPS);
                     snifferBuilder.setHostsSniffer(hostsSniffer);
                 }
                 this.sniffer = snifferBuilder.build();
@@ -126,8 +125,8 @@ public class ManagedEsClient implements Managed {
                     failureListener.setSniffer(sniffer);
                 }
             } else {
-                this.restClient = clientBuilder.build();
-            }
+				this.restHighLevelClient = new RestHighLevelClient(clientBuilder);
+			}
         }
     }
 
@@ -173,16 +172,24 @@ public class ManagedEsClient implements Managed {
     }
 
     /**
-     * Get the REST client. This can then be used to build a high-level REST
-     * client if required.
+     * Get the low-level REST client.
      *
      * @return the REST client, or {@code null} if using the Transport client.
      */
     public RestClient getRestClient() {
-        return restClient;
+        return restHighLevelClient.getLowLevelClient();
     }
 
-    private void closeClient() {
+	/**
+	 * Get the high-level REST client.
+	 *
+	 * @return the high-level REST client, or {@code null} if using the Transport client.
+	 */
+	public RestHighLevelClient getRestHighLevelClient() {
+		return restHighLevelClient;
+	}
+
+	private void closeClient() {
         if (null != client) {
             client.close();
         }
@@ -195,8 +202,8 @@ public class ManagedEsClient implements Managed {
     }
 
     private void closeRestClient() throws IOException {
-        if (null != restClient) {
-            restClient.close();
+        if (null != restHighLevelClient) {
+			restHighLevelClient.close();
         }
     }
 
