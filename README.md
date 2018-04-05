@@ -1,11 +1,13 @@
-Dropwizard Elasticsearch
-========================
+Dropwizard Elasticsearch 6
+==========================
 
-[![Build Status](https://travis-ci.org/dropwizard/dropwizard-elasticsearch.svg?branch=master)](https://travis-ci.org/dropwizard/dropwizard-elasticsearch)
+[![Build Status](https://travis-ci.org/mattflax/dropwizard-elasticsearch6.svg?branch=master)](https://travis-ci.org/dropwizard/dropwizard-elasticsearch)
+<!--
 [![Coverage Status](https://img.shields.io/coveralls/dropwizard/dropwizard-elasticsearch.svg)](https://coveralls.io/r/dropwizard/dropwizard-elasticsearch)
 [![Maven Central](https://img.shields.io/maven-central/v/io.dropwizard.modules/dropwizard-elasticsearch.svg)](http://mvnrepository.com/artifact/io.dropwizard.modules/dropwizard-elasticsearch)
+-->
 
-A set of classes for using [Elasticsearch][1] (version 2.3.0 and higher) in a [Dropwizard][2] application.
+A set of classes for using [Elasticsearch][1] (version 6.2.3 and higher) in a [Dropwizard][2] application.
 
 The package provides a [lifecycle-managed][3] client class (`ManagedEsClient`), a configuration class with the most
 common options (`EsConfiguration`), and some [health checks][4] which can instantly be used in any Dropwizard application.
@@ -19,10 +21,10 @@ common options (`EsConfiguration`), and some [health checks][4] which can instan
 Usage
 -----
 
-Just add `EsConfiguration` to your [Configuration](http://dropwizard.io/1.1.0/docs/manual/core.html#configuration) class and
+Just add `EsConfiguration` to your [Configuration](http://dropwizard.io/1.3.0/docs/manual/core.html#configuration) class and
 create an `ManagedEsClient` instance in the run method of your service.
 
-You can also add one of the existing health checks to your [Environment](http://dropwizard.io/1.1.0/docs/manual/core.html#environments)
+You can also add one of the existing health checks to your [Environment](http://dropwizard.io/1.3.0/docs/manual/core.html#environments)
 in the same method. At least the usage of `EsClusterHealthCheck` is strongly advised.
 
 
@@ -43,29 +45,46 @@ Configuration
 
 The following configuration settings are supported by `EsConfiguration`:
 
-* `nodeClient`: When `true`, `ManagedEsClient` will create a `NodeClient`, otherwise a `TransportClient`; default: `true`
-* `servers`: A list of servers for usage with the created TransportClient if `nodeClient` is `false`
-* `clusterName`: The name of the Elasticsearch cluster; default: "elasticsearch"
-* `settings`: Any additional settings for Elasticsearch, see [Configuration](https://www.elastic.co/guide/en/elasticsearch/reference/2.4/setup-configuration.html)
-* `settingsFile`: Any additional settings file for Elasticsearch, see [Configuration](https://www.elastic.co/guide/en/elasticsearch/reference/2.4/setup-configuration.html)
+* `transportClient`: When `true`, `ManagedEsClient` will create a `TransportClient`, otherwise a `RestClient`; default: `false`
+* `servers`: A list of servers for usage with the created client.
+* `clusterName`: The name of the Elasticsearch cluster; default: "elasticsearch" (TransportClient only)
+* `settings`: Any additional settings for Elasticsearch, see
+[Configuration](https://www.elastic.co/guide/en/elasticsearch/reference/6.2/setup-configuration.html) (TransportClient only)
+* `settingsFile`: Any additional settings file for Elasticsearch, see
+[Configuration](https://www.elastic.co/guide/en/elasticsearch/reference/2.4/setup-configuration.html) (TransportClient only)
+* `headers`: Any additional headers that should be sent (RestClient only)
+* `sniffer`: Sniffer configuration (RestClient only)
+  * `enabled`: Should the Sniffer be enabled; default: `false`
+  * `snifferIntervalMillis`: Interval between sniffer checks; default `600000`
+  * `sniffOnFailure`: Should the sniffer use a failure listener; default `false`
+  * `sniffFailureMillis`: Interval between checks after a failure; default `30000`
+  * `useHttps`: Should the sniffer use HTTPS to check nodes; default `false`
 
-An example configuration file for creating a Node Client could like this:
+An example configuration file for creating a Transport Client could like this:
 
+    transportClient: true
     clusterName: MyClusterName
+    servers: [ "localhost:9300" ]
     settings:
       node.name: MyCustomNodeName
 
-The order of precedence is: `nodeClient`/`servers`/`clusterName` > `settings` > `settingsFile`, meaning that
+The order of precedence is: `transportClient`/`servers`/`clusterName` > `settings` > `settingsFile`, meaning that
 any setting in `settingsFile` can be overwritten with `settings` which in turn get overwritten by the specific settings
 like `clusterName`.
 
-### Notes for Elasticsearch 5.x
 
-Elasticsearch 5 does not allow the creation of a NodeClient, and it is disabled in this version of
-the connector.
+### Notes about the TransportClient
+
+The TransportClient is deprecated, and you are encouraged to use the
+RestClient. This has the advantage of not being tied to the specific
+Elasticsearch version being used, but does require more detailed code
+for lower-level methods (such as cluster health, retrieve aliases, etc.)
+
+The NodeClient was removed in Elasticsearch 5.x, and it is no longer
+valid in this connector.
 
 The suggested alternative is to launch a local coordinating node, with whichever plugins you require,
-and use the TransportClient to communicate with that. The coordinating node should join your cluster.
+and use the Transport or Rest client to communicate with that. The coordinating node should join your cluster.
 
 See [Connecting a Client to a Coordinating Only Node](https://www.elastic.co/guide/en/elasticsearch/client/java-api/current/client-connected-to-client-node.html)
 
@@ -91,6 +110,8 @@ Please file bug reports and feature requests in [GitHub issues](https://github.c
 
 Acknowledgements
 ----------------
+
+This project was forked from the initial Dropwizard Elasticsearch connector.
 
 Thanks to Alexander Reelsen (@spinscale) for his [Dropwizard Blog Sample](https://github.com/spinscale/dropwizard-blog-sample)
 which sparked the idea for this project.
