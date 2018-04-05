@@ -1,7 +1,7 @@
 Dropwizard Elasticsearch 6
 ==========================
 
-[![Build Status](https://travis-ci.org/mattflax/dropwizard-elasticsearch6.svg?branch=master)](https://travis-ci.org/dropwizard/dropwizard-elasticsearch6)
+[![Build Status](https://travis-ci.org/mattflax/dropwizard-elasticsearch6.svg?branch=master)](https://travis-ci.org/mattflax/dropwizard-elasticsearch6)
 <!--
 [![Coverage Status](https://img.shields.io/coveralls/dropwizard/dropwizard-elasticsearch.svg)](https://coveralls.io/r/dropwizard/dropwizard-elasticsearch)
 [![Maven Central](https://img.shields.io/maven-central/v/io.dropwizard.modules/dropwizard-elasticsearch.svg)](http://mvnrepository.com/artifact/io.dropwizard.modules/dropwizard-elasticsearch)
