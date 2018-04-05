@@ -92,6 +92,30 @@ See [Connecting a Client to a Coordinating Only Node](https://www.elastic.co/gui
 Maven Artifacts
 ---------------
 
+To install using Maven, this github repository can be added to your
+pom.xml:
+
+    <repositories>
+        <repository>
+            <id>dropwizard-elasticsearch-mvn-repo</id>
+            <url>https://raw.github.com/mattflax/dropwizard-elasticsearch/mvn-repo/</url>
+            <snapshots>
+                <enabled>true</enabled>
+                <updatePolicy>always</updatePolicy>
+            </snapshots>
+        </repository>
+    </repositories>
+
+Once that has been done, the project can be added as a regular dependency:
+
+    <dependency>
+      <groupId>io.dropwizard.modules</groupId>
+      <artifactId>dropwizard-elasticsearch6</artifactId>
+      <version>1.3.1-0-SNAPSHOT</version>
+    </dependency>
+
+
+<!--
 This project is available on Maven Central. To add it to your project simply add the following dependencies to your
 `pom.xml`:
 
@@ -100,6 +124,7 @@ This project is available on Maven Central. To add it to your project simply add
       <artifactId>dropwizard-elasticsearch</artifactId>
       <version>1.1.0-1</version>
     </dependency>
+-->
 
 
 Support
