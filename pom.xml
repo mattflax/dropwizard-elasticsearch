@@ -25,15 +25,15 @@
     </licenses>
 
     <scm>
-        <developerConnection>scm:git:git@github.com:mattflax/dropwizard-elasticsearch.git</developerConnection>
-        <connection>scm:git:https://github.com/mattflax/dropwizard-elasticsearch.git</connection>
-        <url>https://github.com/mattflax/dropwizard-elasticsearch</url>
+        <developerConnection>scm:git:git@github.com:mattflax/dropwizard-elasticsearch6.git</developerConnection>
+        <connection>scm:git:https://github.com/mattflax/dropwizard-elasticsearch6.git</connection>
+        <url>https://github.com/mattflax/dropwizard-elasticsearch6</url>
         <tag>HEAD</tag>
     </scm>
 
     <ciManagement>
         <system>Travis CI</system>
-        <url>https://travis-ci.org/mattflax/dropwizard-elasticsearch</url>
+        <url>https://travis-ci.org/mattflax/dropwizard-elasticsearch6</url>
     </ciManagement>
 
     <issueManagement>
@@ -78,6 +78,9 @@
         <log4j.version>2.8.1</log4j.version>
         <dropwizard.version>1.3.1</dropwizard.version>
         <elasticsearch.version>5.6.9</elasticsearch.version>
+        <!-- github server corresponds to entry in ~/.m2/settings.xml,
+             used when deploying to github mvn-repo branch. -->
+        <github.global.server>github</github.global.server>
     </properties>
 
     <dependencyManagement>
@@ -242,7 +245,7 @@
                     <includes>
                         <include>**/*</include>
                     </includes>
-                    <repositoryName>dropwizard-elasticsearch</repositoryName>
+                    <repositoryName>dropwizard-elasticsearch6</repositoryName>
                     <repositoryOwner>mattflax</repositoryOwner>
                 </configuration>
                 <executions>
@@ -250,7 +253,7 @@
                         <goals>
                             <goal>site</goal>
                         </goals>
-                        <phase>site-deploy</phase>
+                        <phase>deploy</phase>
                     </execution>
                 </executions>
             </plugin>
